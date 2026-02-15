@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phalanx — Tokenized Carry Protocol</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #06090E;
+    --bg2: #0B1018;
+    --bg3: #111820;
+    --accent: #00D4AA;
+    --accent-dim: #00A886;
+    --accent-glow: #00FFCC;
+    --text: #E8ECF1;
+    --text-dim: #7A8999;
+    --text-muted: #3D4C5C;
+    --border: #1A2433;
+    --green: #00D4AA;
+    --red: #FF4466;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ═══ NOISE TEXTURE ═══ */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* ═══ NAV ═══ */
+  nav {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 100;
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(6, 9, 14, 0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .nav-logo svg { width: 32px; height: 32px; }
+
+  .nav-logo span {
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 36px;
+  }
+
+  .nav-links a {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--text); }
+
+  .nav-btn {
+    background: var(--accent);
+    color: var(--bg);
+    padding: 10px 24px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+
+  .nav-btn:hover {
+    background: var(--accent-glow);
+    box-shadow: 0 0 30px rgba(0, 212, 170, 0.2);
+  }
+
+  /* ═══ HERO ═══ */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+    padding: 120px 20px 80px;
+  }
+
+  /* Grid background */
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0, 212, 170, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 212, 170, 0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse 70% 50% at 50% 40%, black 20%, transparent 70%);
+  }
+
+  /* Glow orb */
+  .hero::after {
+    content: '';
+    position: absolute;
+    top: 15%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 400px;
+    background: radial-gradient(ellipse, rgba(0, 212, 170, 0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    font-size: 12px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 40px;
+    position: relative;
+    z-index: 1;
+    animation: fadeUp 0.8s ease-out;
+  }
+
+  .hero-badge .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .hero h1 {
+    font-size: clamp(42px, 6vw, 72px);
+    font-weight: 300;
+    line-height: 1.1;
+    letter-spacing: -1px;
+    margin-bottom: 24px;
+    position: relative;
+    z-index: 1;
+    animation: fadeUp 0.8s ease-out 0.1s both;
+  }
+
+  .hero h1 em {
+    font-style: normal;
+    color: var(--accent);
+  }
+
+  .hero-sub {
+    font-size: 18px;
+    color: var(--text-dim);
+    max-width: 520px;
+    line-height: 1.7;
+    margin-bottom: 48px;
+    font-weight: 300;
+    position: relative;
+    z-index: 1;
+    animation: fadeUp 0.8s ease-out 0.2s both;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 80px;
+    position: relative;
+    z-index: 1;
+    animation: fadeUp 0.8s ease-out 0.3s both;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: var(--bg);
+    padding: 14px 36px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 15px;
+    text-decoration: none;
+    transition: all 0.25s;
+    border: none;
+    cursor: pointer;
+  }
+
+  .btn-primary:hover {
+    background: var(--accent-glow);
+    box-shadow: 0 0 40px rgba(0, 212, 170, 0.25);
+    transform: translateY(-1px);
+  }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--text);
+    padding: 14px 36px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 15px;
+    text-decoration: none;
+    border: 1px solid var(--border);
+    transition: all 0.25s;
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--text-muted);
+    background: rgba(255,255,255,0.03);
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ═══ LIVE STATS BAR ═══ */
+  .stats-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    max-width: 800px;
+    width: 100%;
+    position: relative;
+    z-index: 1;
+    animation: fadeUp 0.8s ease-out 0.4s both;
+  }
+
+  .stat {
+    background: var(--bg2);
+    padding: 28px 20px;
+    text-align: center;
+  }
+
+  .stat-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 28px;
+    font-weight: 500;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+
+  /* ═══ VAULTS SECTION ═══ */
+  .section {
+    padding: 120px 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-size: 11px;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    margin-bottom: 16px;
+    font-weight: 500;
+  }
+
+  .section-title {
+    font-size: 36px;
+    font-weight: 300;
+    margin-bottom: 16px;
+    letter-spacing: -0.5px;
+  }
+
+  .section-desc {
+    color: var(--text-dim);
+    font-size: 16px;
+    max-width: 560px;
+    line-height: 1.7;
+    margin-bottom: 60px;
+    font-weight: 300;
+  }
+
+  /* Vault table */
+  .vault-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .vault-table thead th {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    padding: 16px 20px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    font-weight: 400;
+  }
+
+  .vault-table thead th:last-child { text-align: right; }
+  .vault-table thead th:nth-child(3),
+  .vault-table thead th:nth-child(4),
+  .vault-table thead th:nth-child(5) { text-align: right; }
+
+  .vault-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+
+  .vault-table tbody tr:hover { background: rgba(0, 212, 170, 0.02); }
+
+  .vault-table td {
+    padding: 20px;
+    font-size: 15px;
+  }
+
+  .vault-table td:nth-child(3),
+  .vault-table td:nth-child(4),
+  .vault-table td:nth-child(5),
+  .vault-table td:last-child { text-align: right; }
+
+  .vault-name {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .vault-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .vault-ticker {
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .vault-underlying {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .vault-apy {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+    color: var(--accent);
+  }
+
+  .vault-funding {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-dim);
+    font-size: 13px;
+  }
+
+  .vault-oi {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-dim);
+    font-size: 14px;
+  }
+
+  .vault-deposit-btn {
+    background: transparent;
+    border: 1px solid var(--accent-dim);
+    color: var(--accent);
+    padding: 8px 20px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .vault-deposit-btn:hover {
+    background: var(--accent);
+    color: var(--bg);
+  }
+
+  .tag-equity {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: rgba(0, 212, 170, 0.1);
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 500;
+  }
+
+  .tag-commodity {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: rgba(255, 187, 51, 0.1);
+    color: #FFBB33;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 500;
+  }
+
+  /* ═══ HOW IT WORKS ═══ */
+  .how-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .how-card {
+    background: var(--bg2);
+    padding: 48px 36px;
+    position: relative;
+  }
+
+  .how-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 48px;
+    font-weight: 300;
+    color: var(--accent);
+    opacity: 0.15;
+    position: absolute;
+    top: 24px;
+    right: 28px;
+  }
+
+  .how-title {
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 12px;
+  }
+
+  .how-desc {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.7;
+    font-weight: 300;
+  }
+
+  /* ═══ MECHANISM ═══ */
+  .mechanism-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .mech-card {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 40px;
+    background: var(--bg2);
+  }
+
+  .mech-card h3 {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .mech-card h3 .icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: rgba(0, 212, 170, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+
+  .mech-card p {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.7;
+    font-weight: 300;
+  }
+
+  .mech-card .mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--accent);
+    background: rgba(0, 212, 170, 0.05);
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-top: 16px;
+    border: 1px solid rgba(0, 212, 170, 0.1);
+  }
+
+  /* ═══ PROTOCOL SECTION ═══ */
+  .protocol-features {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .pf-card {
+    background: var(--bg2);
+    padding: 36px 28px;
+  }
+
+  .pf-card h4 {
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+
+  .pf-card p {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.6;
+    font-weight: 300;
+  }
+
+  .pf-icon {
+    font-size: 22px;
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  /* ═══ CTA SECTION ═══ */
+  .cta-section {
+    text-align: center;
+    padding: 120px 40px;
+    position: relative;
+  }
+
+  .cta-section::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 800px;
+    height: 400px;
+    background: radial-gradient(ellipse, rgba(0, 212, 170, 0.04) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .cta-section h2 {
+    font-size: 36px;
+    font-weight: 300;
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .cta-section p {
+    color: var(--text-dim);
+    font-size: 16px;
+    margin-bottom: 40px;
+    font-weight: 300;
+    position: relative;
+    z-index: 1;
+  }
+
+  .cta-section .btn-primary { position: relative; z-index: 1; display: inline-block; }
+
+  /* ═══ FOOTER ═══ */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 48px 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .footer-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .footer-left span {
+    font-size: 12px;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .footer-links {
+    display: flex;
+    gap: 32px;
+  }
+
+  .footer-links a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 13px;
+    transition: color 0.2s;
+  }
+
+  .footer-links a:hover { color: var(--text-dim); }
+
+  /* ═══ RESPONSIVE ═══ */
+  @media (max-width: 768px) {
+    nav { padding: 16px 20px; }
+    .nav-links { gap: 16px; }
+    .nav-links a:not(.nav-btn) { display: none; }
+    .hero { padding: 100px 20px 60px; }
+    .stats-bar { grid-template-columns: repeat(2, 1fr); }
+    .section { padding: 80px 20px; }
+    .how-grid { grid-template-columns: 1fr; }
+    .mechanism-grid { grid-template-columns: 1fr; }
+    .protocol-features { grid-template-columns: repeat(2, 1fr); }
+    .vault-table { font-size: 13px; }
+    .vault-table td, .vault-table th { padding: 14px 12px; }
+    footer { flex-direction: column; gap: 24px; }
+  }
+
+  /* ═══ SCROLLBAR ═══ */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* ═══ TABLE OVERFLOW ═══ */
+  .table-wrap { overflow-x: auto; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <svg viewBox="0 0 120 80" fill="none">
+      <path d="M10 20 L50 45 L10 70" stroke="#00D4AA" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.3"/>
+      <path d="M30 20 L70 45 L30 70" stroke="#00D4AA" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+      <path d="M50 20 L90 45 L50 70" stroke="#00FFCC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="90" cy="45" r="3.5" fill="#00FFCC" opacity="0.8"/>
+    </svg>
+    <span>Phalanx</span>
+  </div>
+  <div class="nav-links">
+    <a href="#vaults">Vaults</a>
+    <a href="#mechanism">Mechanism</a>
+    <a href="https://docs.phalanx.trading" target="_blank">Docs</a>
+    <a href="#" class="nav-btn">Launch App</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">
+    <span class="dot"></span>
+    Live on HyperEVM
+  </div>
+  <h1>Earn <em>carry</em> on<br>tokenized equities</h1>
+  <p class="hero-sub">
+    Delta-neutral vaults that capture funding rates on equity and commodity perpetuals. Deposit USDC. Earn yield. Withdraw anytime.
+  </p>
+  <div class="hero-actions">
+    <a href="#" class="btn-primary">Launch App</a>
+    <a href="#mechanism" class="btn-secondary">How it works</a>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat">
+      <div class="stat-value">$—</div>
+      <div class="stat-label">Total TVL</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">34–75%</div>
+      <div class="stat-label">APY Range</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">6</div>
+      <div class="stat-label">Active Vaults</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">$0</div>
+      <div class="stat-label">Fees Earned</div>
+    </div>
+  </div>
+</section>
+
+<!-- VAULTS -->
+<section class="section" id="vaults">
+  <div class="section-label">Carry Vaults</div>
+  <div class="section-title">Pick your yield</div>
+  <div class="section-desc">
+    Each vault runs a matched spot + perp position on HyperLiquid, collecting funding rate payments every hour. Your deposit is tokenized as a ct- token representing your share.
+  </div>
+
+  <div class="table-wrap">
+  <table class="vault-table">
+    <thead>
+      <tr>
+        <th>Vault</th>
+        <th>Type</th>
+        <th>8h Funding</th>
+        <th>Ann. Yield</th>
+        <th>Open Interest</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>
+          <div class="vault-name">
+            <div class="vault-icon">MU</div>
+            <div>
+              <div class="vault-ticker">ct-MU</div>
+              <div class="vault-underlying">Micron Technology</div>
+            </div>
+          </div>
+        </td>
+        <td><span class="tag-equity">Equity</span></td>
+        <td class="vault-funding">0.0552%</td>
+        <td class="vault-apy">60.5%</td>
+        <td class="vault-oi">$60M</td>
+        <td><button class="vault-deposit-btn">Deposit</button></td>
+      </tr>
+      <tr>
+        <td>
+          <div class="vault-name">
+            <div class="vault-icon">GL</div>
+            <div>
+              <div class="vault-ticker">ct-GOOGL</div>
+              <div class="vault-underlying">Alphabet Inc.</div>
+            </div>
+          </div>
+        </td>
+        <td><span class="tag-equity">Equity</span></td>
+        <td class="vault-funding">0.0373%</td>
+        <td class="vault-apy">40.9%</td>
+        <td class="vault-oi">$26M</td>
+        <td><button class="vault-deposit-btn">Deposit</button></td>
+      </tr>
+      <tr>
+        <td>
+          <div class="vault-name">
+            <div class="vault-icon">NV</div>
+            <div>
+              <div class="vault-ticker">ct-NVDA</div>
+              <div class="vault-underlying">NVIDIA Corp.</div>
+            </div>
+          </div>
+        </td>
+        <td><span class="tag-equity">Equity</span></td>
+        <td class="vault-funding">0.0252%</td>
+        <td class="vault-apy">27.6%</td>
+        <td class="vault-oi">$59M</td>
+        <td><button class="vault-deposit-btn">Deposit</button></td>
+      </tr>
+      <tr>
+        <td>
+          <div class="vault-name">
+            <div class="vault-icon">TS</div>
+            <div>
+              <div class="vault-ticker">ct-TSLA</div>
+              <div class="vault-underlying">Tesla Inc.</div>
+            </div>
+          </div>
+        </td>
+        <td><span class="tag-equity">Equity</span></td>
+        <td class="vault-funding">0.0300%</td>
+        <td class="vault-apy">32.9%</td>
+        <td class="vault-oi">$45M</td>
+        <td><button class="vault-deposit-btn">Deposit</button></td>
+      </tr>
+      <tr>
+        <td>
+          <div class="vault-name">
+            <div class="vault-icon">AU</div>
+            <div>
+              <div class="vault-ticker">ct-GOLD</div>
+              <div class="vault-underlying">Gold Spot</div>
+            </div>
+          </div>
+        </td>
+        <td><span class="tag-commodity">Commodity</span></td>
+        <td class="vault-funding">0.0055%</td>
+        <td class="vault-apy">6.0%</td>
+        <td class="vault-oi">$119M</td>
+        <td><button class="vault-deposit-btn">Deposit</button></td>
+      </tr>
+      <tr>
+        <td>
+          <div class="vault-name">
+            <div class="vault-icon">AG</div>
+            <div>
+              <div class="vault-ticker">ct-SILVER</div>
+              <div class="vault-underlying">Silver Spot</div>
+            </div>
+          </div>
+        </td>
+        <td><span class="tag-commodity">Commodity</span></td>
+        <td class="vault-funding">0.0050%</td>
+        <td class="vault-apy">5.5%</td>
+        <td class="vault-oi">$106M</td>
+        <td><button class="vault-deposit-btn">Deposit</button></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section" id="mechanism">
+  <div class="section-label">Mechanism</div>
+  <div class="section-title">How Phalanx works</div>
+  <div class="section-desc">
+    Phalanx captures the carry — the structural premium that long speculators pay to hold leveraged equity exposure.
+  </div>
+
+  <div class="how-grid">
+    <div class="how-card">
+      <span class="how-number">01</span>
+      <h3 class="how-title">Deposit USDC</h3>
+      <p class="how-desc">Deposit into any ct- vault. You receive ERC-4626 vault shares representing your proportional ownership. Your exchange rate only goes up as yield accrues.</p>
+    </div>
+    <div class="how-card">
+      <span class="how-number">02</span>
+      <h3 class="how-title">We run the trade</h3>
+      <p class="how-desc">The vault simultaneously buys spot equity on FELIX and shorts the matching perp on HyperLiquid. Delta = zero. Price exposure = zero. Funding flows to you every hour.</p>
+    </div>
+    <div class="how-card">
+      <span class="how-number">03</span>
+      <h3 class="how-title">Withdraw anytime</h3>
+      <p class="how-desc">Burn your ct- tokens to redeem USDC at the current exchange rate. Small redemptions are instant from the vault buffer. Larger ones settle within 30 minutes.</p>
+    </div>
+  </div>
+</section>
+
+<!-- DELTA NEUTRAL EXPLAINER -->
+<section class="section">
+  <div class="section-label">Delta Neutral</div>
+  <div class="section-title">Protected by design</div>
+  <div class="section-desc">
+    Your capital never takes directional risk. Whether NVDA goes to $200 or $50, your vault earns the same carry.
+  </div>
+
+  <div class="mechanism-grid">
+    <div class="mech-card">
+      <h3><span class="icon">↑</span> Spot Long</h3>
+      <p>The vault holds the underlying equity token on FELIX. If price rises, the spot position profits.</p>
+      <div class="mono">Long 100 NVDA @ $140 = +$14,000 exposure</div>
+    </div>
+    <div class="mech-card">
+      <h3><span class="icon">↓</span> Perp Short</h3>
+      <p>Simultaneously, the vault shorts the matching perpetual future on HyperLiquid. If price rises, the short loses — exactly offsetting the spot gain.</p>
+      <div class="mono">Short 100 NVDA-PERP @ $140 = −$14,000 exposure</div>
+    </div>
+    <div class="mech-card">
+      <h3><span class="icon">=</span> Net Delta Zero</h3>
+      <p>The two positions cancel out. The vault has zero price exposure. What remains is the funding rate — paid hourly by leveraged longs to shorts.</p>
+      <div class="mono">Δ = +$14,000 − $14,000 = $0 price risk</div>
+    </div>
+    <div class="mech-card">
+      <h3><span class="icon">$</span> Pure Yield</h3>
+      <p>Funding rates on equity perps have been structurally positive since HIP-3 launch. Demand to go long equities on-chain exceeds short supply. You are the supply.</p>
+      <div class="mono">0.03% per 8h × 3 × 365 = 32.9% APY</div>
+    </div>
+  </div>
+</section>
+
+<!-- PROTOCOL FEATURES -->
+<section class="section">
+  <div class="section-label">Protocol</div>
+  <div class="section-title">Built different</div>
+  <div class="section-desc">
+    No VCs. No token. No governance theater. Just yield.
+  </div>
+
+  <div class="protocol-features">
+    <div class="pf-card">
+      <span class="pf-icon">⛓</span>
+      <h4>HyperEVM Native</h4>
+      <p>The first tokenized carry protocol on HyperEVM. Composable with Pendle, lending markets, and DEXs from day one.</p>
+    </div>
+    <div class="pf-card">
+      <span class="pf-icon">🔒</span>
+      <h4>Non-custodial</h4>
+      <p>Vault smart contracts hold all assets. The operator bot has trading-only API keys. No withdrawal authority. Admin keys on hardware wallet.</p>
+    </div>
+    <div class="pf-card">
+      <span class="pf-icon">📡</span>
+      <h4>Transparent NAV</h4>
+      <p>On-chain oracle publishes real-time vault NAV. Exchange rate verifiable by anyone. No black box.</p>
+    </div>
+    <div class="pf-card">
+      <span class="pf-icon">🏗</span>
+      <h4>No Token</h4>
+      <p>Phalanx has no governance token. No airdrop farming. No dilution. The product is the product. Yield is the incentive.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <h2>Start earning carry today</h2>
+  <p>Deposit USDC into any vault and start collecting funding rates.</p>
+  <a href="#" class="btn-primary">Launch App</a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-left">
+    <svg viewBox="0 0 120 80" fill="none" width="28" height="20">
+      <path d="M10 20 L50 45 L10 70" stroke="#00D4AA" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.3"/>
+      <path d="M30 20 L70 45 L30 70" stroke="#00D4AA" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+      <path d="M50 20 L90 45 L50 70" stroke="#00FFCC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span>Phalanx Labs © 2026</span>
+  </div>
+  <div class="footer-links">
+    <a href="https://docs.phalanx.trading" target="_blank">Docs</a>
+    <a href="https://x.com/PhalanxProtocol" target="_blank">Twitter</a>
+    <a href="https://discord.gg/phalanx" target="_blank">Discord</a>
+    <a href="https://github.com/phalanx-labs" target="_blank">GitHub</a>
+  </div>
+</footer>
+
+</body>
+</html>
