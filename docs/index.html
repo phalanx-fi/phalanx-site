@@ -4,6 +4,26 @@
   <meta charset="utf-8" />
   <title>Phalanx Docs</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/css/theme-simple-dark.css">
+  <style>
+    :root {
+      --theme-hue: 165;
+      --theme-saturation: 100%;
+      --theme-lightness: 42%;
+      --base-background-color: #06090E;
+      --base-color: #E8ECF1;
+      --base-font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --code-font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --sidebar-background: #0B1018;
+      --sidebar-border-color: #1A2433;
+      --sidebar-name-color: #E8ECF1;
+      --link-color: #00D4AA;
+      --link-color--hover: #00FFCC;
+    }
+    .app-name-link img { display:none; }
+  </style>
 </head>
 <body>
   <div id="app"></div>
@@ -11,11 +31,15 @@
     window.$docsify = {
       name: 'Phalanx',
       repo: 'https://github.com/phalanx-fi/phalanx-site',
+      homepage: 'README.md',
       loadSidebar: true,
       auto2top: true,
-      subMaxLevel: 2
+      subMaxLevel: 2,
+      relativePath: true,
+      notFoundPage: true
     }
   </script>
   <script src="https://cdn.jsdelivr.net/npm/docsify@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify-themeable@0"></script>
 </body>
 </html>
