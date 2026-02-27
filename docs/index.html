@@ -32,7 +32,10 @@
       name: 'Phalanx',
       repo: 'https://github.com/phalanx-fi/phalanx-site',
       homepage: 'README.md',
-      loadSidebar: true,
+      loadSidebar: "_sidebar.md",
+      alias: {
+        "/.+/_sidebar.md": "/docs/_sidebar.md",
+      },
       auto2top: true,
       subMaxLevel: 2,
       relativePath: true,
