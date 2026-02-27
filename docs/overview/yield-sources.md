@@ -14,7 +14,7 @@ Phalanx vaults hold short perpetual positions and collect funding when rates are
 
 ### Current Funding Rates (as of February 2026)
 
-| Name | 8h Funding Rate | Annualized | Open Interest |
+| Name | 1h Funding Rate | Annualized | Open Interest |
 |------|----------------|------------|---------------|
 | MU | 0.0552% | ~60.5% | $60M |
 | GOOGL | 0.0373% | ~40.9% | $26M |

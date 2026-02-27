@@ -7,3 +7,4 @@
 - [ERC-7540](https://eips.ethereum.org/EIPS/eip-7540)
 - [Felix Protocol](https://usefelix.xyz)
 - [hyper-evm-lib](https://github.com/hyperliquid-dev/hyper-evm-lib)
+- [Phalanx Whitepaper v3 (hourly funding)](references/assets/phalanx_whitepaper_v3_hourly.pdf)
